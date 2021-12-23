@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Level {
-    List<Platform> platforms = new ArrayList<>();
+    public List<Platform> platforms = new ArrayList<>();
 
-    public void addPlatform(float xOffset, float yOffset) {
-        Platform platform = new Platform(xOffset, yOffset);
+    public void addPlatform(float x, float y, float width, float height) {
+        Platform platform = new Platform(x, y, width, height);
         platforms.add(platform);
     }
 }
