@@ -12,11 +12,13 @@ public class Entity {
     FireAndWater main;
 
     UUID uuid;
-    float x, y;
+    public float x, y;
     int direction; //0 - right, 1 - left, 2 - up, 3 - down
     Texture texture;
     float xSpeed, ySpeed;
+    float defaultXSpeed = 3.5f, defaultJumpSpeed = 8f;
     boolean jump, touchingGround;
+    public Platform[] colliders;
 
     public Entity(FireAndWater main, float x, float y, Texture texture) {
         this.main = main;
@@ -25,10 +27,11 @@ public class Entity {
         this.direction = 0;
         this.x = x;
         this.y = y;
-        this.xSpeed = 3.5f;
+        this.xSpeed = 0f;
         this.ySpeed = 0f;
         this.jump = false;
         this.texture = texture;
+        colliders = new Platform[4];
     }
 
     public Entity(FireAndWater main, UUID uuid, float x, float y, Texture texture) {
@@ -38,30 +41,14 @@ public class Entity {
         this.direction = 0;
         this.x = x;
         this.y = y;
-        this.xSpeed = 3.5f;
+        this.xSpeed = 0f;
         this.ySpeed = 0f;
-        this.jump = false;
+        this.jump = true;
         this.texture = texture;
+        colliders = new Platform[4];
     }
 
     public void move(float x, float y) {
-        if(x != 0) {
-            Platform rightCollider = collidingRight(main.level.platforms);
-            Platform leftCollider = collidingLeft(main.level.platforms);
-
-            if(rightCollider != null) {
-                this.x = rightCollider.x - texture.getWidth();
-
-                return;
-            }
-
-            if(leftCollider != null) {
-                this.x = leftCollider.x + leftCollider.width;
-
-                return;
-            }
-        }
-
         if(this.x > x)
             direction = 1;
         else
@@ -77,7 +64,7 @@ public class Entity {
     }
 
     public void jump() {
-        ySpeed = 6f;
+        ySpeed = defaultJumpSpeed;
         jump = true;
     }
 
@@ -98,31 +85,69 @@ public class Entity {
     }
 
     public void update() {
-        if(y != 0)
-            touchingGround = false;
-        else
-            touchingGround = true;
+        colliders[0] = collidingTop(main.level.platforms);
+        colliders[1] = collidingDown(main.level.platforms, ySpeed);
+        colliders[2] = collidingRight(main.level.platforms);
+        colliders[3] = collidingLeft(main.level.platforms);
+
+        if(colliders[1] == null)
+            jump = true;
 
         if(jump) {
-            Platform collidingPlatform = collidingTop(main.level.platforms);
-            if(collidingPlatform == null) {
-                move(0, ySpeed);
-                ySpeed -= FireAndWater.gravity;
-                if (this.y < 0) {
+            if(colliders[1] == null) {
+                if (colliders[0] == null) {
+                    ySpeed -= FireAndWater.gravity;
+                    move(0, ySpeed);
+                    touchingGround = false;
+                }
+                else {
                     ySpeed = 0;
-                    this.y = 0;
+                    ySpeed -= FireAndWater.gravity;
+                    move(0, ySpeed);
+                    this.y = colliders[0].y - texture.getHeight();
+                    touchingGround = false;
                 }
             }
             else {
                 ySpeed = 0;
-                this.y = collidingPlatform.y - texture.getHeight();
+                this.y = colliders[1].y + colliders[1].height;
+                touchingGround = true;
+                jump = false;
             }
         }
+
+        if(xSpeed > 0) {
+            if(colliders[2] == null) {
+                move(xSpeed, 0);
+            }
+            else {
+                this.x = colliders[2].x - texture.getWidth();
+            }
+        }
+        if(xSpeed < 0) {
+            if(colliders[3] == null) {
+                move(xSpeed, 0);
+            }
+            else {
+                this.x = colliders[3].x + colliders[3].width;
+            }
+        }
+
+        xSpeed = 0;
     }
 
     public Platform collidingTop(List<Platform> platforms) {
         for(Platform platform : platforms) {
-            if(this.y + ySpeed + texture.getHeight() > platform.y && this.y + ySpeed < platform.y + platform.height) //Check for y
+            if(this.y + ySpeed + texture.getHeight() >= platform.y && this.y + ySpeed + texture.getHeight() <= platform.y + platform.height/2) //Check for y
+                if(this.x + texture.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
+                    return platform;
+        }
+        return null;
+    }
+
+    public Platform collidingDown(List<Platform> platforms, float yOffset) {
+        for(Platform platform : platforms) {
+            if(this.y + yOffset >= platform.y + platform.height/2 && this.y + yOffset <= platform.y + platform.height) //Check for y
                 if(this.x + texture.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
                     return platform;
         }
@@ -132,7 +157,7 @@ public class Entity {
     public Platform collidingRight(List<Platform> platforms) {
         for(Platform platform : platforms) {
             if(this.y + texture.getHeight() > platform.y && this.y < platform.y + platform.height) //Check for y
-                if(this.x + xSpeed + texture.getWidth() >= platform.x && this.x + xSpeed <= platform.x + platform.width) //Check for x
+                if(this.x + xSpeed + texture.getWidth() >= platform.x && this.x + xSpeed + texture.getWidth() <= platform.x + platform.width/2) //Check for x
                     return platform;
         }
         return null;
@@ -141,16 +166,7 @@ public class Entity {
     public Platform collidingLeft(List<Platform> platforms) {
         for(Platform platform : platforms) {
             if(this.y + texture.getHeight() > platform.y && this.y < platform.y + platform.height) //Check for y
-                if(this.x - xSpeed + texture.getWidth() >= platform.x && this.x - xSpeed <= platform.x + platform.width) //Check for x
-                    return platform;
-        }
-        return null;
-    }
-
-    public Platform collidingDown(List<Platform> platforms) {
-        for(Platform platform : platforms) {
-            if(this.y - ySpeed + texture.getHeight() > platform.y && this.y - ySpeed < platform.y + platform.height) //Check for y
-                if(this.x + texture.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
+                if(this.x + xSpeed >= platform.x + platform.width/2 && this.x + xSpeed <= platform.x + platform.width) //Check for x
                     return platform;
         }
         return null;
