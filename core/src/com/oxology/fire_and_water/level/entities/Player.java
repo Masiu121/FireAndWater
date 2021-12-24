@@ -2,6 +2,7 @@ package com.oxology.fire_and_water.level.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -12,10 +13,12 @@ import java.util.UUID;
 public class Player extends Entity {
     String username;
     float usernameLength;
+    boolean debug;
 
     public Player(FireAndWater main, String username, Texture texture) {
-        super(main, UUID.nameUUIDFromBytes(("Player:" + username).getBytes()), 20, 0, texture);
+        super(main, UUID.nameUUIDFromBytes(("Player:" + username).getBytes()), 20, 100, texture);
         this.username = username;
+        this.debug = false;
     }
 
     public void setUsernameLength() {
@@ -32,13 +35,14 @@ public class Player extends Entity {
         if(Gdx.input.isKeyPressed(Input.Keys.W) && touchingGround)
             jump();
         if(Gdx.input.isKeyPressed(Input.Keys.A))
-            move(-xSpeed, 0);
+            this.xSpeed = -this.defaultXSpeed;
         if(Gdx.input.isKeyPressed(Input.Keys.D))
-            move(xSpeed, 0);
+            this.xSpeed = this.defaultXSpeed;
     }
 
     public void draw(SpriteBatch batch, BitmapFont font) {
         super.draw(batch);
+        font.getData().setScale(2);
         font.draw(batch, username, this.x + texture.getWidth()/2 - usernameLength/2, this.y + texture.getHeight() + 50);
     }
 }
