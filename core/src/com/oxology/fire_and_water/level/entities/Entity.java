@@ -14,13 +14,12 @@ public class Entity {
     UUID uuid;
     public float x, y;
     int direction; //0 - right, 1 - left, 2 - up, 3 - down
-    Texture texture;
     float xSpeed, ySpeed;
     float defaultXSpeed = 3.5f, defaultJumpSpeed = 8f;
     boolean jump, touchingGround;
     public Platform[] colliders;
 
-    public Entity(FireAndWater main, float x, float y, Texture texture) {
+    public Entity(FireAndWater main, float x, float y) {
         this.main = main;
 
         this.uuid = UUID.randomUUID();
@@ -30,11 +29,10 @@ public class Entity {
         this.xSpeed = 0f;
         this.ySpeed = 0f;
         this.jump = false;
-        this.texture = texture;
         colliders = new Platform[4];
     }
 
-    public Entity(FireAndWater main, UUID uuid, float x, float y, Texture texture) {
+    public Entity(FireAndWater main, UUID uuid, float x, float y) {
         this.main = main;
 
         this.uuid = uuid;
@@ -44,7 +42,6 @@ public class Entity {
         this.xSpeed = 0f;
         this.ySpeed = 0f;
         this.jump = true;
-        this.texture = texture;
         colliders = new Platform[4];
     }
 
@@ -81,7 +78,7 @@ public class Entity {
     }
 
     public void draw(SpriteBatch batch) {
-        batch.draw(texture, this.x, this.y);
+        batch.draw(FireAndWater.img, this.x, this.y);
     }
 
     public void update() {
@@ -104,7 +101,7 @@ public class Entity {
                     ySpeed = 0;
                     ySpeed -= FireAndWater.gravity;
                     move(0, ySpeed);
-                    this.y = colliders[0].y - texture.getHeight();
+                    this.y = colliders[0].y - FireAndWater.img.getHeight();
                     touchingGround = false;
                 }
             }
@@ -121,7 +118,7 @@ public class Entity {
                 move(xSpeed, 0);
             }
             else {
-                this.x = colliders[2].x - texture.getWidth();
+                this.x = colliders[2].x - FireAndWater.img.getWidth();
             }
         }
         if(xSpeed < 0) {
@@ -138,8 +135,8 @@ public class Entity {
 
     public Platform collidingTop(List<Platform> platforms) {
         for(Platform platform : platforms) {
-            if(this.y + ySpeed + texture.getHeight() >= platform.y && this.y + ySpeed + texture.getHeight() <= platform.y + platform.height/2) //Check for y
-                if(this.x + texture.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
+            if(this.y + ySpeed + FireAndWater.img.getHeight() >= platform.y && this.y + ySpeed + FireAndWater.img.getHeight() <= platform.y + platform.height/2) //Check for y
+                if(this.x + FireAndWater.img.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
                     return platform;
         }
         return null;
@@ -148,7 +145,7 @@ public class Entity {
     public Platform collidingDown(List<Platform> platforms, float yOffset) {
         for(Platform platform : platforms) {
             if(this.y + yOffset >= platform.y + platform.height/2 && this.y + yOffset <= platform.y + platform.height) //Check for y
-                if(this.x + texture.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
+                if(this.x + FireAndWater.img.getWidth() > platform.x && this.x < platform.x + platform.width) //Check for x
                     return platform;
         }
         return null;
@@ -156,8 +153,8 @@ public class Entity {
 
     public Platform collidingRight(List<Platform> platforms) {
         for(Platform platform : platforms) {
-            if(this.y + texture.getHeight() > platform.y && this.y < platform.y + platform.height) //Check for y
-                if(this.x + xSpeed + texture.getWidth() >= platform.x && this.x + xSpeed + texture.getWidth() <= platform.x + platform.width/2) //Check for x
+            if(this.y + FireAndWater.img.getHeight() > platform.y && this.y < platform.y + platform.height) //Check for y
+                if(this.x + xSpeed + FireAndWater.img.getWidth() >= platform.x && this.x + xSpeed + FireAndWater.img.getWidth() <= platform.x + platform.width/2) //Check for x
                     return platform;
         }
         return null;
@@ -165,7 +162,7 @@ public class Entity {
 
     public Platform collidingLeft(List<Platform> platforms) {
         for(Platform platform : platforms) {
-            if(this.y + texture.getHeight() > platform.y && this.y < platform.y + platform.height) //Check for y
+            if(this.y + FireAndWater.img.getHeight() > platform.y && this.y < platform.y + platform.height) //Check for y
                 if(this.x + xSpeed >= platform.x + platform.width/2 && this.x + xSpeed <= platform.x + platform.width) //Check for x
                     return platform;
         }
