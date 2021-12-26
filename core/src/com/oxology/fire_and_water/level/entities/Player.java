@@ -2,7 +2,6 @@ package com.oxology.fire_and_water.level.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -15,8 +14,8 @@ public class Player extends Entity {
     float usernameLength;
     boolean debug;
 
-    public Player(FireAndWater main, String username, Texture texture) {
-        super(main, UUID.nameUUIDFromBytes(("Player:" + username).getBytes()), 20, 100, texture);
+    public Player(FireAndWater main, String username, float x, float y) {
+        super(main, UUID.nameUUIDFromBytes(("Player:" + username).getBytes()), x, y);
         this.username = username;
         this.debug = false;
     }
@@ -43,6 +42,6 @@ public class Player extends Entity {
     public void draw(SpriteBatch batch, BitmapFont font) {
         super.draw(batch);
         font.getData().setScale(2);
-        font.draw(batch, username, this.x + texture.getWidth()/2 - usernameLength/2, this.y + texture.getHeight() + 50);
+        font.draw(batch, username, this.x + FireAndWater.img.getWidth()/2 - usernameLength/2, this.y + FireAndWater.img.getHeight() + 50);
     }
 }
