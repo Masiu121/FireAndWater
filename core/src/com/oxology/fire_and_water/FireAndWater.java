@@ -10,15 +10,18 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.oxology.fire_and_water.level.Level;
+import com.oxology.fire_and_water.level.entities.Entity;
 import com.oxology.fire_and_water.level.entities.Player;
 import com.oxology.fire_and_water.net.GameClient;
 import com.oxology.fire_and_water.net.GameServer;
+import com.oxology.fire_and_water.net.packets.Packet00;
+import com.oxology.fire_and_water.net.packets.Packet01;
 
 import java.util.Scanner;
 
 public class FireAndWater extends ApplicationAdapter {
 	SpriteBatch batch;
-	Texture img;
+	public static Texture img;
 	GameServer server;
 	GameClient client;
 	Scanner scanner = new Scanner(System.in);
@@ -28,9 +31,15 @@ public class FireAndWater extends ApplicationAdapter {
 	GlyphLayout layout;
 	public Level level;
 	boolean showInfo;
+	boolean connected;
 	
 	@Override
 	public void create () {
+
+		font = new BitmapFont(Gdx.files.internal("PixelFont.fnt"));
+		font.getData().scale(0.5f);
+
+		layout = new GlyphLayout();
 		showInfo = false;
 		img = new Texture("badlogic.jpg");
 
@@ -51,7 +60,9 @@ public class FireAndWater extends ApplicationAdapter {
 
 		batch = new SpriteBatch();
 
-		/*
+		System.out.print("Pick username: ");
+		String username = scanner.nextLine();
+
 		System.out.print("Do you want to run the server? (y/n): ");
 		char choice = scanner.next().charAt(0);
 		if(choice == 'y') {
@@ -61,22 +72,25 @@ public class FireAndWater extends ApplicationAdapter {
 
 		client = new GameClient(this, "localhost");
 		client.start();
-		client.sendData("ping".getBytes());
-		*/
 
-		font = new BitmapFont(Gdx.files.internal("PixelFont.fnt"));
-		font.getData().scale(0.5f);
-
-		layout = new GlyphLayout();
+		player = new Player(this, username, 20, 100);
+		player.setUsernameLength();
+		level.addEntity(player);
 
 		gravity = 0.25f;
-		player = new Player(this, "Maksuu121", img);
-		player.setUsernameLength();
+
+		connected = false;
 	}
 
 	public float getStringWidth(String string) {
 		layout.setText(font, string);
 		return layout.width;
+	}
+
+	public void connect() {
+		Packet00 packet00 = new Packet00(player.getUsername(), player.x, player.y);
+		client.sendData(packet00.getData());
+		connected = true;
 	}
 
 	@Override
@@ -86,8 +100,13 @@ public class FireAndWater extends ApplicationAdapter {
 		if(Gdx.input.isKeyJustPressed(Input.Keys.F3))
 			toggleDebug();
 		batch.begin();
-		player.draw(batch, font);
 		level.drawLevel(batch);
+		for(Entity entity : level.entities) {
+			if(entity instanceof Player)
+				((Player) entity).draw(batch, font);
+			else
+				entity.draw(batch);
+		}
 		if(showInfo) {
 			int lineHeight = 20;
 			int lineOffset = -5;
@@ -112,6 +131,9 @@ public class FireAndWater extends ApplicationAdapter {
 	}
 
 	public void update() {
+		if(Gdx.input.isKeyJustPressed(Input.Keys.C))
+			if(!connected)
+				connect();
 		player.update();
 	}
 	
@@ -119,6 +141,8 @@ public class FireAndWater extends ApplicationAdapter {
 	public void dispose () {
 		batch.dispose();
 		img.dispose();
+		Packet01 packet01 = new Packet01(player.getUsername());
+		packet01.writeData(client);
 	}
 
 	public void toggleDebug() {
